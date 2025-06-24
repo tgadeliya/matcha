@@ -10,6 +10,8 @@ readme = "README.md"
 requires-python = ">=3.12.10"
 dependencies = [
     "einops>=0.8.1",
+    "numpy<2",
+    "regex>=2024.11.6",
     "torch==2.2.2",
 ]
 
@@ -19,3 +21,7 @@ dev = [
     "ruff>=0.12.0",
     "ty>=0.0.1a11",
 ]
+
+
+[tool.ruff]
+line-length = 88
