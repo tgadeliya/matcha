@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "matcha"
+version = "0.1.0"
+description = "Implementations of language models from scratch"
+readme = "README.md"
+requires-python = ">=3.12.10"
+dependencies = [
+    "einops>=0.8.1",
+    "torch==2.2.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "ruff>=0.12.0",
+    "ty>=0.0.1a11",
+]
