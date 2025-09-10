@@ -9,10 +9,13 @@ description = "Implementations of language models from scratch"
 readme = "README.md"
 requires-python = ">=3.12.10"
 dependencies = [
+    "dotenv>=0.9.9",
     "einops>=0.8.1",
     "numpy<2",
+    "python-dotenv>=1.1.1",
     "regex>=2024.11.6",
     "torch==2.2.2",
+    "wandb>=0.21.3",
 ]
 
 [dependency-groups]
