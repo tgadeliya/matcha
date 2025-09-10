@@ -49,6 +49,8 @@ class BPETokenizer:
     ) -> "BPETokenizer":
         vocab = json.load(open(vocab_filepath, encoding="utf-8"))
         merges = json.load(open(merges_filepath, encoding="utf-8"))
+        merges = [(m[0].encode(),m[1].encode()) for m in merges]
+        vocab = {int(k):v.encode() for k,v in vocab.items()}
         return cls(vocab=vocab, merges=merges, special_tokens=special_tokens)
 
     def encode(self, text: str) -> list[int]:
