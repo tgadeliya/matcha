@@ -212,10 +212,10 @@ def save_vocab_and_merges(
         k: v.decode("utf-8", errors="replace") for k, v in vocab.items()
     }
     merges_serializable = [
-        [
+        (
             p1.decode("utf-8", errors="replace"),
             p2.decode("utf-8", errors="replace"),
-        ]
+        )
         for (p1, p2) in merges
     ]
 

@@ -45,6 +45,7 @@ def generate(
     random_seed: int = 25,
 ) -> list[str]:
     def top_p_sampling(probs: Tensor, top_p: float):
+        # TODO: fix bug
         probs_sorted = sorted(
             [(i, p) for i, p in enumerate(probs.tolist())], key=lambda x: x[1]
         )

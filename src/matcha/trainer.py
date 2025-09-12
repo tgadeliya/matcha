@@ -10,7 +10,7 @@ import wandb
 from dotenv import load_dotenv
 from torch import Tensor, nn
 
-from matcha.data.dataloader import data_loading
+from matcha.data.dataloader import data_loading, DEVICE
 from matcha.optimizers import AdamW
 from matcha.models.decoders import TransformerLM
 from matcha.components.losses import cross_entropy_loss
@@ -18,13 +18,11 @@ from matcha.components.metrics import perplexity
 from matcha.utils import load_checkpoint, save_checkpoint
 
 load_dotenv()
-wandb.login(key=os.getenv("WANDB_API_KEY"))
+
 
 @dataclass
 class TrainerConfig:
     # Model params
-    # training params
-    # checkpointing params
     vocab_size: int
     max_steps: int
     val_steps: int
@@ -36,12 +34,15 @@ class TrainerConfig:
     num_layers: int
     num_heads: int
     d_ff: int
+    theta: int
     # optimizer
     lr: float
     weight_decay: float
     betas: tuple[float, float]
     eps: float
+    # checkpointing params
     checkpoint_dir: str
+    # training params
     train_data_path: str
     val_data_path: str
 
@@ -53,19 +54,18 @@ class TrainerConfig:
 
 class Trainer:
     def __init__(self, cfg: TrainerConfig) -> None:
-        self.cfg = cfg
-        # self._setup(cfg)
-        # self._setup_dataloaders(cfg)
-        self.device: str = self.cfg.device
-        self.train_dataloder
-        self.validation_dataloader
+        self.cfg: TrainerConfig = cfg
+        self.device: DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+        
+        self.train_dataloder: np.ndarray
+        self.val_dataloader: np.ndarray
         self.model: nn.Module
         self.optimizer: AdamW
         self.iteration: int = 0
 
     def _setup_dataloaders(self) -> None:
-        self.train_dataloder = ...
-        self.validation_dataloader = ...
+        self.train_dataloder = np.load(file=self.cfg.train_data_path, mmap_mode="r").astype(np.int64)
+        self.val_dataloader = np.load(file=self.cfg.val_data_path, mmap_mode="r").astype(np.int64)
 
     def _setup(self) -> None:
         self.model = TransformerLM(**asdict(self.cfg))
@@ -78,24 +78,22 @@ class Trainer:
         )
 
     def get_train_batch(self) -> dict[str, Tensor]:
-        x = np.memmap(self.cfg.train_data_path, dtype=np.uint16, mode="r")
         batch, labels = data_loading(
-            x, self.cfg.batch_size, self.cfg.context_length, self.device
+            self.train_dataloder, self.cfg.batch_size, self.cfg.context_length, self.device
         )
-
         return {"input": batch, "labels": labels}
 
     def get_val_batch(self) -> dict[str, Tensor]:
         batch, labels = data_loading(
-            x, self.cfg.batch_size, self.cfg.context_length, self.device
+            self.val_dataloader, self.cfg.batch_size, self.cfg.context_length, self.device
         )
         return {"input": batch, "labels": labels}
 
     def train(self):
+        self._setup()
+        self._setup_dataloaders()
+        # wandb.login(key=os.getenv("WANDB_API_KEY"))
         with wandb.init(project="matcha", config=asdict(self.cfg)) as run:
-            self._setup()
-            self._setup_dataloaders()
-
             for i in range(self.cfg.max_steps):
                 loss = self.training_step()
                 run.log({"loss": loss.item(), "step": i})
@@ -109,7 +107,6 @@ class Trainer:
         self.model.train()
         out = self.model(batch["input"])
         loss = cross_entropy_loss(out, batch["labels"])
-
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
@@ -122,13 +119,14 @@ class Trainer:
         for _ in range(self.cfg.val_steps):
             val_perp = self.validation_step()
             val_perplexities.append(val_perp)
-        
+
         self.save_checkpoint(self.iteration)
         return sum(val_perplexities) / len(val_perplexities)
 
     def validation_step(self):
         batch = self.get_val_batch()
-        return perplexity(batch["input"], batch["labels"])
+        out = self.model(batch["input"])
+        return perplexity(out, batch["labels"])
 
     def save_checkpoint(self, step: int) -> None:
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -141,9 +139,7 @@ class Trainer:
             iteration=step,
             out=ckpt_path,
         )
-        with open(
-            Path(self.cfg.checkpoint_dir, "trainer_config.json"), "w"
-        ) as f:
+        with open(Path(self.cfg.checkpoint_dir, "trainer_config.json"), "w") as f:
             json.dump(asdict(self.cfg), f)
 
     @classmethod

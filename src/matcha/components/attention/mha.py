@@ -17,7 +17,7 @@ def scaled_dot_product_attention(
         K, Q, "... seq_lenk d , ... seq_lenq d -> ... seq_lenq seq_lenk"
     ) / (Q.size()[-1] ** 0.5)
     if mask is not None:
-        KQ.masked_fill_(~mask, -torch.inf)
+        KQ = KQ.masked_fill(~mask, -torch.inf)
     KQ = softmax(KQ, dim=-1)
     return einops.einsum(
         KQ, V, "... seq_lenq seq_lenk , ... seq_lenk d_v -> ... seq_lenq d_v"

@@ -3,10 +3,10 @@ from collections import OrderedDict
 import torch.nn as nn
 from torch import Tensor
 
-from matcha.components.embeddings import Embedding
 from matcha.components.blocks import TransformerBlock
-from matcha.components.normalization import RMSNorm
+from matcha.components.embeddings import Embedding
 from matcha.components.linear import Linear
+from matcha.components.normalization import RMSNorm
 
 
 class TransformerLM(nn.Module):
@@ -19,6 +19,8 @@ class TransformerLM(nn.Module):
         num_heads: int,
         d_ff: int,
         theta: float,
+        *args,
+        **kwargs,
     ) -> None:
         super().__init__()  # type: ignore
         self.emb = Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
