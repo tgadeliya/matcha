@@ -1,28 +1,22 @@
+from pathlib import Path
 from matcha.trainer import Trainer, TrainerConfig
-from matcha.tokenizers.trainer import train_bpe, save_vocab_and_merges
+from matcha.tokenizers.bpe_trainer import BPETrainer
 
-import torch
-
-
-def run_tokenizer():
-    input_path = "data/TinyStoriesV2-GPT4-valid.txt"
-    vocab, merges = train_bpe(
-        input_path=input_path,
+def train_tokenizer():
+    bpe_trainer = BPETrainer(
+        corpus_path=Path("data/TinyStoriesV2-GPT4-valid.txt"),
         vocab_size=10_000,
         special_tokens=["<|endoftext|>"],
-        multiprocessing=True,
     )
 
-    save_vocab_and_merges(
-        vocab=vocab,
-        merges=merges,
-        vocab_path="data/tokenizer/tiny_stories_vocab_valid.json",
-        merges_path="data/tokenizer/tiny_stories_merges_valid.json",
+    bpe_trainer.train(multiprocessing=True, num_processes=4)
+    bpe_trainer.save_tokenizer(
+        dir_path=Path("data/tokenizer/tiny_stories_valid"),
     )
 
 
 
-def run():
+def train_language_model():
     cfg = TrainerConfig(
         vocab_size=20000,
         max_steps=10,
