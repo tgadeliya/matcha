@@ -14,7 +14,7 @@ dependencies = [
     "numpy<2",
     "python-dotenv>=1.1.1",
     "regex>=2024.11.6",
-    "torch==2.2.2",
+    "torch==2.2.2", # fixed for Intel Mac
     "tqdm>=4.67.1",
     "wandb>=0.21.3",
 ]
@@ -33,10 +33,20 @@ fix = true
 line-length = 88
 unsafe-fixes = true
 
-
 [tool.ruff.lint]
-extend-select =[
+preview = true
+select = [
+    "E",
+    "F",
+    "I",
     "UP"
+]
+extend-select = [
+    "E501",
+    "UP045"
+]
+ignore = [
+    "E702"
 ]
 
 [tool.ruff.format]
