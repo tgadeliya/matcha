@@ -29,4 +29,16 @@ dev = [
 
 
 [tool.ruff]
+fix = true
 line-length = 88
+unsafe-fixes = true
+
+
+[tool.ruff.lint]
+extend-select =[
+    "UP"
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+line-ending = "lf"

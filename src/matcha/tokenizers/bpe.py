@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple
+from collections.abc import Iterable, Iterator
 
 import regex as re
 
@@ -12,7 +12,7 @@ _WORD_RE = re.compile(PAT)
 
 
 # --- GPT-2 bytes <-> unicode mapping (avoids control chars) ---
-def _bytes_to_unicode() -> Dict[int, str]:
+def _bytes_to_unicode() -> dict[int, str]:
     # Matches GPT-2's byte encoder mapping.
     bs = list(range(33, 127)) + list(range(161, 173)) + list(range(174, 256))
     cs = bs[:]
@@ -26,8 +26,8 @@ def _bytes_to_unicode() -> Dict[int, str]:
     return dict(zip(bs, cs))
 
 
-_BYTE_ENC: Dict[int, str] = _bytes_to_unicode()
-_BYTE_DEC: Dict[str, int] = {v: k for k, v in _BYTE_ENC.items()}
+_BYTE_ENC: dict[int, str] = _bytes_to_unicode()
+_BYTE_DEC: dict[str, int] = {v: k for k, v in _BYTE_ENC.items()}
 
 
 class BPETokenizer:
@@ -50,23 +50,23 @@ class BPETokenizer:
 
     def __init__(
         self,
-        vocab: Dict[int, str],
-        merges: List[Tuple[str, str]],
-        special_tokens: Optional[List[str]] = None,
+        vocab: dict[int, str],
+        merges: list[tuple[str, str]],
+        special_tokens: list[str] | None = None,
         ensure_all_bytes: bool = True,
         add_missing_specials: bool = True,
     ) -> None:
         # Store vocab (id->tok) and inverse (tok->id)
-        self.id_to_tok: Dict[int, str] = dict(vocab)
-        self.tok_to_id: Dict[str, int] = {v: k for k, v in self.id_to_tok.items()}
+        self.id_to_tok: dict[int, str] = dict(vocab)
+        self.tok_to_id: dict[str, int] = {v: k for k, v in self.id_to_tok.items()}
 
         # Merge ranks (lower index = higher priority)
-        self.ranks: Dict[Tuple[str, str], int] = {
+        self.ranks: dict[tuple[str, str], int] = {
             (str(a), str(b)): i for i, (a, b) in enumerate(merges)
         }
 
         # Special tokens (kept in raw text space, not byte-unicode space)
-        self.special_tokens: List[str] = sorted(special_tokens or [], key=len, reverse=True)
+        self.special_tokens: list[str] = sorted(special_tokens or [], key=len, reverse=True)
         self._st_re = (
             re.compile(f"({'|'.join(re.escape(t) for t in self.special_tokens)})")
             if self.special_tokens
@@ -85,10 +85,10 @@ class BPETokenizer:
         cls,
         vocab_filepath: str,
         merges_filepath: str,
-        special_tokens: Optional[List[str]] = None,
+        special_tokens: list[str] | None = None,
         ensure_all_bytes: bool = True,
         add_missing_specials: bool = True,
-    ) -> "BPETokenizer":
+    ) -> BPETokenizer:
         """
         Load tokenizer from JSON files.
 
@@ -111,7 +111,7 @@ class BPETokenizer:
         with open(merges_filepath, encoding="utf-8") as f:
             raw_merges = json.load(f)
 
-        merges: List[Tuple[str, str]] = [ (str(a), str(b)) for a, b in raw_merges ]
+        merges: list[tuple[str, str]] = [ (str(a), str(b)) for a, b in raw_merges ]
 
         return cls(
             vocab=id_to_tok,
@@ -146,7 +146,7 @@ class BPETokenizer:
                 next_id += 1
 
     # -------- Core BPE --------
-    def _bpe(self, token: str) -> List[str]:
+    def _bpe(self, token: str) -> list[str]:
         """
         Run BPE over a token in byte-unicode space.
         Returns a list of merged pieces (still in byte-unicode space).
@@ -158,7 +158,7 @@ class BPETokenizer:
 
         word = list(token)
 
-        def get_pairs(w: List[str]) -> set[Tuple[str, str]]:
+        def get_pairs(w: list[str]) -> set[tuple[str, str]]:
             return {(w[i], w[i + 1]) for i in range(len(w) - 1)}
 
         pairs = get_pairs(word)
@@ -169,7 +169,7 @@ class BPETokenizer:
                 break
 
             first, second = best
-            new_word: List[str] = []
+            new_word: list[str] = []
             i = 0
             while i < len(word):
                 if i < len(word) - 1 and word[i] == first and word[i + 1] == second:
@@ -195,11 +195,11 @@ class BPETokenizer:
         return encoded        
 
 
-    def _encode(self, text: str) -> List[int]:
+    def _encode(self, text: str) -> list[int]:
         """
         Encode a string into a list of token ids.
         """
-        result: List[int] = []
+        result: list[int] = []
 
         parts = self._st_re.split(text) if self._st_re else [text]
         for chunk in parts:
@@ -240,7 +240,7 @@ class BPETokenizer:
         for chunk in iterable:
             yield from self._encode(chunk)
 
-    def decode(self, ids: List[int]) -> str:
+    def decode(self, ids: list[int]) -> str:
         """
         Decode a list of token ids back into a string.
         Special tokens are emitted literally as UTF-8 text.

@@ -1,4 +1,3 @@
-import torch
 from torch import Tensor
 
 def cross_entropy_loss(x: Tensor, target: Tensor) -> Tensor:
