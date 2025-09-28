@@ -1,10 +1,9 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 import pytest
 import torch
 
 from matcha.models import TransformerLM
-
 
 
 @dataclass
@@ -33,9 +32,9 @@ class TestTransformerModel:
         x = torch.randint(0, vocab_size, (bs, seq_len))
         model = TransformerLM(**transformer_args)
         out = model(x)
-        
+
         out_bs, out_seq_len, out_vocab_size = out.size()
-        
+
         assert out_bs == bs
         assert out_seq_len == seq_len
         assert out_vocab_size == vocab_size

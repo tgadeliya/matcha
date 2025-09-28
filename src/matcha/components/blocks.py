@@ -1,10 +1,10 @@
 import torch.nn as nn
 from torch import Tensor
 
-from matcha.components.normalization import RMSNorm
 from matcha.components.attention import MultiHeadAttention
 from matcha.components.embeddings import RotaryPositionalEmbedding
 from matcha.components.feedforward import SwiGLU
+from matcha.components.normalization import RMSNorm
 
 
 class TransformerBlock(nn.Module):

@@ -1,8 +1,16 @@
 
+RUFF_LINE_LENGTH := 88
 
+fix: lint_docs ruff_fmt ruff_check
 
-make lint:
+ruff_fmt:
+	uvx ruff format 
+
+ruff_check:
 	uvx ruff check
 
-make test:
-	uvx pytest
+lint_docs:
+	uvx docformatter --in-place -r \
+		--wrap-summaries=$(RUFF_LINE_LENGTH) \
+		--wrap-descriptions=$(RUFF_LINE_LENGTH) \
+		.

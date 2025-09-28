@@ -5,7 +5,6 @@ from collections.abc import Iterable, Iterator
 
 import regex as re
 
-
 # --- Regex for initial text chunking (GPT-2-like) ---
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 _WORD_RE = re.compile(PAT)
@@ -31,8 +30,7 @@ _BYTE_DEC: dict[str, int] = {v: k for k, v in _BYTE_ENC.items()}
 
 
 class BPETokenizer:
-    """
-    Byte-level BPE (GPT-2 style).
+    """Byte-level BPE (GPT-2 style).
 
     Parameters
     ----------
@@ -66,7 +64,9 @@ class BPETokenizer:
         }
 
         # Special tokens (kept in raw text space, not byte-unicode space)
-        self.special_tokens: list[str] = sorted(special_tokens or [], key=len, reverse=True)
+        self.special_tokens: list[str] = sorted(
+            special_tokens or [], key=len, reverse=True
+        )
         self._st_re = (
             re.compile(f"({'|'.join(re.escape(t) for t in self.special_tokens)})")
             if self.special_tokens
@@ -89,8 +89,7 @@ class BPETokenizer:
         ensure_all_bytes: bool = True,
         add_missing_specials: bool = True,
     ) -> BPETokenizer:
-        """
-        Load tokenizer from JSON files.
+        """Load tokenizer from JSON files.
 
         Expected formats:
         - vocab.json: either token->id (e.g., {"Ġthe": 464, ...}) OR id->token (ids as strings)
@@ -111,7 +110,7 @@ class BPETokenizer:
         with open(merges_filepath, encoding="utf-8") as f:
             raw_merges = json.load(f)
 
-        merges: list[tuple[str, str]] = [ (str(a), str(b)) for a, b in raw_merges ]
+        merges: list[tuple[str, str]] = [(str(a), str(b)) for a, b in raw_merges]
 
         return cls(
             vocab=id_to_tok,
@@ -122,8 +121,9 @@ class BPETokenizer:
         )
 
     def _ensure_base_bytes(self) -> None:
-        """
-        Ensure that all 256 base byte tokens (in byte-unicode space) exist in the vocab.
+        """Ensure that all 256 base byte tokens (in byte-unicode space) exist in the
+        vocab.
+
         This guarantees that pieces like 'Ġ' (space) are always encodable.
         """
         next_id = (max(self.id_to_tok) + 1) if self.id_to_tok else 0
@@ -134,8 +134,8 @@ class BPETokenizer:
                 next_id += 1
 
     def _ensure_special_tokens(self) -> None:
-        """
-        Add any missing special tokens to the vocab with new ids.
+        """Add any missing special tokens to the vocab with new ids.
+
         Stored as their literal string (not byte-unicode mapped).
         """
         next_id = max(self.id_to_tok) + 1 if self.id_to_tok else 0
@@ -147,8 +147,8 @@ class BPETokenizer:
 
     # -------- Core BPE --------
     def _bpe(self, token: str) -> list[str]:
-        """
-        Run BPE over a token in byte-unicode space.
+        """Run BPE over a token in byte-unicode space.
+
         Returns a list of merged pieces (still in byte-unicode space).
         """
         if not token:
@@ -187,18 +187,15 @@ class BPETokenizer:
         return word
 
     # -------- Public API --------
-    def encode(self, text: list[str]| str) -> list[list[int]]:
-        if isinstance(text,str):
+    def encode(self, text: list[str] | str) -> list[list[int]]:
+        if isinstance(text, str):
             text = [text]
-        
-        encoded = [self._encode(t) for t in text]
-        return encoded        
 
+        encoded = [self._encode(t) for t in text]
+        return encoded
 
     def _encode(self, text: str) -> list[int]:
-        """
-        Encode a string into a list of token ids.
-        """
+        """Encode a string into a list of token ids."""
         result: list[int] = []
 
         parts = self._st_re.split(text) if self._st_re else [text]
@@ -231,7 +228,9 @@ class BPETokenizer:
                         tid_ch = self.tok_to_id.get(ch)
                         if tid_ch is None:
                             # This indicates the base bytes weren't ensured (or a corrupted vocab)
-                            raise KeyError(f"Missing base byte token in vocab: {repr(ch)}")
+                            raise KeyError(
+                                f"Missing base byte token in vocab: {repr(ch)}"
+                            )
                         result.append(tid_ch)
 
         return result
@@ -241,8 +240,8 @@ class BPETokenizer:
             yield from self._encode(chunk)
 
     def decode(self, ids: list[int]) -> str:
-        """
-        Decode a list of token ids back into a string.
+        """Decode a list of token ids back into a string.
+
         Special tokens are emitted literally as UTF-8 text.
         """
         out = bytearray()
@@ -258,7 +257,8 @@ class BPETokenizer:
 
             # Otherwise map byte-unicode chars back to raw bytes
             for ch in tok:
-                # If tok was accidentally a raw text token (not byte-unicode), fall back to utf-8
+                # If tok was accidentally a raw text token (not byte-unicode),
+                # fall back to utf-8
                 if ch not in _BYTE_DEC:
                     out.extend(ch.encode("utf-8"))
                 else:
