@@ -5,6 +5,7 @@ from typing import Self
 
 import tomli_w
 
+ROOT_DIR = Path(__file__).parent.parent.parent.resolve()
 
 @dataclass
 class BasicConfig:
@@ -12,6 +13,11 @@ class BasicConfig:
     def load_from_file(cls, path: Path) -> Self:
         with path.open("rb") as f:
             params = tomllib.load(f)
+
+        for param, val in params.items():
+            if param.endswith("_path"):
+                params[param] = str(ROOT_DIR / Path(val).resolve())
+        
         return cls(**params)
 
     def write_to_file(self, path: Path) -> None:
@@ -51,7 +57,7 @@ class TrainerConfig(BasicConfig):
     betas: tuple[float, float]
     eps: float
     # checkpointing params
-    checkpoint_dir: str
+    checkpoint_dir_path: str
     # training params
     train_data_path: str
     val_data_path: str

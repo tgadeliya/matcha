@@ -28,6 +28,8 @@ dev = [
     "ty>=0.0.1a11",
 ]
 
+[project.scripts]
+matcha-run = "matcha.run:main"
 
 [tool.ruff]
 fix = true
