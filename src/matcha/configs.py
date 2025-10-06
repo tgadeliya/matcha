@@ -1,14 +1,23 @@
 import tomllib
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Self
+
+import tomli_w
 
 
+@dataclass
 class BasicConfig:
     @classmethod
-    def load_from_file(cls, path: Path) -> "BasicConfig":
+    def load_from_file(cls, path: Path) -> Self:
         with path.open("rb") as f:
             params = tomllib.load(f)
         return cls(**params)
+
+    def write_to_file(self, path: Path) -> None:
+        with path.open("wb") as f:
+            toml_string = tomli_w.dumps(asdict(self))
+            f.write(toml_string.encode("utf-8"))
 
 
 @dataclass

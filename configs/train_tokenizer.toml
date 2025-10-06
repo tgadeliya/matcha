@@ -1,0 +1,6 @@
+corpus_path = "data/TinyStoriesV2-GPT4-valid.txt"
+vocab_size = 10000
+special_tokens = []
+save_dir_path = "data/tokenizer/ts_10k_tokenizer"
+num_processes = 1
+multiprocessing = false

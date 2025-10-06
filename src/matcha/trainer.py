@@ -117,14 +117,16 @@ class Trainer:
             iteration=step,
             out=ckpt_path,
         )
-        with open(Path(self.cfg.checkpoint_dir, "trainer_config.json"), "w") as f:
-            json.dump(asdict(self.cfg), f)
+    
+        self.cfg.write_to_file(
+            Path(self.cfg.checkpoint_dir, "trainer_config.toml")
+        )
 
     @classmethod
     def load_from_checkpoint(cls, ckpt_file_path: Path) -> "Trainer":
         ckpt_dir = ckpt_file_path.parent
-        cfg: TrainerConfig = TrainerConfig.load_from_json(
-            ckpt_dir / "trainer_config.json"
+        cfg = TrainerConfig.load_from_file(
+            ckpt_dir / "trainer_config.toml"
         )
         trainer = cls(cfg)
         trainer._setup()
