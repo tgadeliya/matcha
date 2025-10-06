@@ -1,5 +1,5 @@
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 
@@ -11,6 +11,7 @@ from torch import Tensor, nn
 import wandb
 from matcha.components.losses import cross_entropy_loss
 from matcha.components.metrics import perplexity
+from matcha.configs import TrainerConfig
 from matcha.data.dataloader import DEVICE, data_loading
 from matcha.models.decoders import TransformerLM
 from matcha.optimizers import AdamW
@@ -18,7 +19,6 @@ from matcha.utils import load_checkpoint, save_checkpoint
 
 load_dotenv()
 
-from matcha.configs import TrainerConfig
 
 class Trainer:
     def __init__(self, cfg: TrainerConfig) -> None:
