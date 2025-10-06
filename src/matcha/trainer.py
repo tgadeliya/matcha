@@ -5,15 +5,15 @@ from pathlib import Path
 
 import numpy as np
 import torch
-import wandb
 from dotenv import load_dotenv
 from torch import Tensor, nn
 
-from matcha.data.dataloader import data_loading, DEVICE
-from matcha.optimizers import AdamW
-from matcha.models.decoders import TransformerLM
+import wandb
 from matcha.components.losses import cross_entropy_loss
 from matcha.components.metrics import perplexity
+from matcha.data.dataloader import DEVICE, data_loading
+from matcha.models.decoders import TransformerLM
+from matcha.optimizers import AdamW
 from matcha.utils import load_checkpoint, save_checkpoint
 
 load_dotenv()
@@ -55,7 +55,7 @@ class Trainer:
     def __init__(self, cfg: TrainerConfig) -> None:
         self.cfg: TrainerConfig = cfg
         self.device: DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
-        
+
         self.train_dataloder: np.ndarray
         self.val_dataloader: np.ndarray
         self.model: nn.Module
@@ -63,8 +63,12 @@ class Trainer:
         self.iteration: int = 0
 
     def _setup_dataloaders(self) -> None:
-        self.train_dataloder = np.load(file=self.cfg.train_data_path, mmap_mode="r").astype(np.int64)
-        self.val_dataloader = np.load(file=self.cfg.val_data_path, mmap_mode="r").astype(np.int64)
+        self.train_dataloder = np.load(
+            file=self.cfg.train_data_path, mmap_mode="r"
+        ).astype(np.int64)
+        self.val_dataloader = np.load(
+            file=self.cfg.val_data_path, mmap_mode="r"
+        ).astype(np.int64)
 
     def _setup(self) -> None:
         self.model = TransformerLM(**asdict(self.cfg))
@@ -78,13 +82,19 @@ class Trainer:
 
     def get_train_batch(self) -> dict[str, Tensor]:
         batch, labels = data_loading(
-            self.train_dataloder, self.cfg.batch_size, self.cfg.context_length, self.device
+            self.train_dataloder,
+            self.cfg.batch_size,
+            self.cfg.context_length,
+            self.device,
         )
         return {"input": batch, "labels": labels}
 
     def get_val_batch(self) -> dict[str, Tensor]:
         batch, labels = data_loading(
-            self.val_dataloader, self.cfg.batch_size, self.cfg.context_length, self.device
+            self.val_dataloader,
+            self.cfg.batch_size,
+            self.cfg.context_length,
+            self.device,
         )
         return {"input": batch, "labels": labels}
 

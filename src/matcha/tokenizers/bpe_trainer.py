@@ -9,18 +9,21 @@ from typing import BinaryIO
 import regex as re
 from tqdm import tqdm
 
+from matcha.configs import TokenizerTrainConfig
+
 GPT2_REGEX_PATTERN = (
     r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""  # noqa:E501
 )
 
 
 class BPETrainer:
-    def __init__(
-        self, corpus_path: str | os.PathLike, vocab_size: int, special_tokens: list[str]
-    ) -> None:
-        self.corpus_path = corpus_path
-        self.vocab_size = vocab_size
-        self.special_tokens = special_tokens
+    def __init__(self, cfg: TokenizerTrainConfig) -> None:
+        self.corpus_path = cfg.corpus_path
+        self.vocab_size = cfg.vocab_size
+        self.special_tokens = cfg.special_tokens
+        self.multiprocessing = cfg.multiprocessing
+        self.num_processes = cfg.num_processes
+        self.dir_path: Path = Path(cfg.save_dir_path)
 
         self.vocab: dict[int, bytes]
         self.merges: list[tuple[bytes, bytes]]
@@ -60,13 +63,15 @@ class BPETrainer:
                     pre_tokenized_dict[token] += 1
         return pre_tokenized_dict
 
-    def train(self, multiprocessing: bool = False, num_processes: int = cpu_count()):
+    def train(
+        self,
+    ):
         start = time.time()
-        if multiprocessing:
+        if self.multiprocessing:
             pre_tokenized_dict = self.create_pre_tokenized_corpus_parallel(
                 self.corpus_path,
                 special_tokens=self.special_tokens,
-                num_processes=num_processes,
+                num_processes=self.num_processes,
             )
         else:
             pre_tokenized_dict = self.create_pre_tokenized_corpus(
@@ -207,10 +212,7 @@ class BPETrainer:
                 merged[k] += v
         return merged
 
-    def save_tokenizer(
-        self,
-        dir_path: Path = Path("."),
-    ) -> None:
+    def save_tokenizer(self) -> None:
         vocab_serializable = {
             k: v.decode("utf-8", errors="replace") for k, v in self.vocab.items()
         }
@@ -222,8 +224,8 @@ class BPETrainer:
             for (p1, p2) in self.merges
         ]
 
-        with open(dir_path / "vocab.json", "w", encoding="utf-8") as f:
+        with open(self.dir_path / "vocab.json", "w", encoding="utf-8") as f:
             json.dump(vocab_serializable, f, ensure_ascii=False, indent=2)
 
-        with open(dir_path / "merges.json", "w", encoding="utf-8") as f:
+        with open(self.dir_path / "merges.json", "w", encoding="utf-8") as f:
             json.dump(merges_serializable, f, ensure_ascii=False, indent=2)

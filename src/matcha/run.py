@@ -1,6 +1,8 @@
 from pathlib import Path
-from matcha.trainer import Trainer, TrainerConfig
+
 from matcha.tokenizers.bpe_trainer import BPETrainer
+from matcha.trainer import Trainer, TrainerConfig
+
 
 def train_tokenizer():
     bpe_trainer = BPETrainer(
@@ -13,7 +15,6 @@ def train_tokenizer():
     bpe_trainer.save_tokenizer(
         dir_path=Path("data/tokenizer/tiny_stories_valid"),
     )
-
 
 
 def train_language_model():
@@ -37,7 +38,7 @@ def train_language_model():
         checkpoint_dir="data/checkpoints",
         train_data_path="/Users/tsimur.hadeliya/code/language_modeling/data/corpus_tokenized/tiny_stories_validation.npy",
         val_data_path="/Users/tsimur.hadeliya/code/language_modeling/data/corpus_tokenized/tiny_stories_validation.npy",
-    )   
+    )
 
     trainer = Trainer(cfg)
     trainer.train()
