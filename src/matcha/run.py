@@ -1,20 +1,27 @@
+import argparse
+from dataclasses import fields, is_dataclass
 from pathlib import Path
+from typing import Any, Union, get_args, get_origin
 
-from matcha.tokenizers.bpe_trainer import BPETrainer
-from matcha.trainer import Trainer, TrainerConfig
+from matcha.configs import TokenizerTrainConfig, TrainerConfig
+from matcha.tokenizers.bpe import BPETrainer
+from matcha.trainer import Trainer
+
+TASKS = {
+    "train": (TrainerConfig, Trainer),
+    "train_tokenizer": (TokenizerTrainConfig, BPETrainer),
+}
 
 
-def train_tokenizer():
+def train_tokenizer(cfg: TokenizerTrainConfig):
     bpe_trainer = BPETrainer(
         corpus_path=Path("data/TinyStoriesV2-GPT4-valid.txt"),
         vocab_size=10_000,
         special_tokens=["<|endoftext|>"],
     )
 
-    bpe_trainer.train(multiprocessing=True, num_processes=4)
-    bpe_trainer.save_tokenizer(
-        dir_path=Path("data/tokenizer/tiny_stories_valid"),
-    )
+    bpe_trainer.train()
+    bpe_trainer.save_tokenizer()
 
 
 def train_language_model():
@@ -42,3 +49,29 @@ def train_language_model():
 
     trainer = Trainer(cfg)
     trainer.train()
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        prog="matcha-run",
+        description="Run Matcha workflows from a TOML config.",
+    )
+    parser.add_argument(
+        "--task",
+        required=True,
+        choices=tuple(TASKS.keys()),
+        help="What task to run.",
+    )
+    parser.add_argument(
+        "--config_path",
+        required=True,
+        help="Path to the TOML config file.",
+    )
+    args = parser.parse_args(argv)
+    config_cls, task_runner = TASKS[args.task][0]
+    config = config_cls.from_file(Path(args.config_path))
+    task_runner(config).run()
+
+
+if __name__ == "__main__":
+    main()

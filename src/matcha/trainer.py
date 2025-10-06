@@ -18,38 +18,7 @@ from matcha.utils import load_checkpoint, save_checkpoint
 
 load_dotenv()
 
-
-@dataclass
-class TrainerConfig:
-    # Model params
-    vocab_size: int
-    max_steps: int
-    val_steps: int
-    val_every_steps: int
-    batch_size: int
-    context_length: int
-    d_model: int
-    device: str
-    num_layers: int
-    num_heads: int
-    d_ff: int
-    theta: int
-    # optimizer
-    lr: float
-    weight_decay: float
-    betas: tuple[float, float]
-    eps: float
-    # checkpointing params
-    checkpoint_dir: str
-    # training params
-    train_data_path: str
-    val_data_path: str
-
-    @classmethod
-    def load_from_json(cls, path) -> "TrainerConfig":
-        trainer_params = json.loads(path)
-        return cls(**trainer_params)
-
+from matcha.configs import TrainerConfig
 
 class Trainer:
     def __init__(self, cfg: TrainerConfig) -> None:
